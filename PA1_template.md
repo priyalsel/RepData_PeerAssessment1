@@ -7,47 +7,91 @@ output:
 
 
 ## Loading and preprocessing the data
-```{r, echo=TRUE}
+
+``` r
 activity <- read.csv("activity.csv")
 ```
-```{r, echo=TRUE}
+
+``` r
 head(activity)
 ```
-```{r, echo=TRUE}
+
+```
+##   steps       date interval
+## 1    NA 2012-10-01        0
+## 2    NA 2012-10-01        5
+## 3    NA 2012-10-01       10
+## 4    NA 2012-10-01       15
+## 5    NA 2012-10-01       20
+## 6    NA 2012-10-01       25
+```
+
+``` r
 nrow(activity)
 ```
+
+```
+## [1] 17568
+```
 ## What is mean total number of steps taken per day?
-```{r, echo=TRUE}
+
+``` r
 dailySteps <- aggregate(steps ~ date,
                          data = activity,
                          sum,
                          na.rm = TRUE)
 ```
-```{r, echo=TRUE}
+
+``` r
 head(dailySteps)
 ```
-```{r, echo=TRUE}
+
+```
+##         date steps
+## 1 2012-10-02   126
+## 2 2012-10-03 11352
+## 3 2012-10-04 12116
+## 4 2012-10-05 13294
+## 5 2012-10-06 15420
+## 6 2012-10-07 11015
+```
+
+``` r
 hist(dailySteps$steps,
      main = "Total Number of Steps Taken Each Day",
      xlab = "Total Number of Steps",
      ylab = "Number of Days")
 ```
-```{r, echo=TRUE}
+
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+
+``` r
 mean(dailySteps$steps)
 ```
-```{r, echo=TRUE}
+
+```
+## [1] 10766.19
+```
+
+``` r
 median(dailySteps$steps)
+```
+
+```
+## [1] 10765
 ```
 The mean total number of steps taken per day is 10,766.19, while the median is 10,765 steps.
 
 ## What is the average daily activity pattern?
-```{r, echo=TRUE}
+
+``` r
 intervalSteps <- aggregate(steps ~ interval,
                            data = activity,
                            mean,
                            na.rm = TRUE)
 ```
-```{r, echo=TRUE}
+
+``` r
 plot(intervalSteps$interval,
      intervalSteps$steps,
      type = "l",
@@ -55,23 +99,38 @@ plot(intervalSteps$interval,
      ylab = "Average Number of Steps",
      main = "Average Daily Activity Pattern")
 ```
-```{r, echo=TRUE}
+
+![](PA1_template_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
+
+``` r
 intervalSteps[which.max(intervalSteps$steps), ]
+```
+
+```
+##     interval    steps
+## 104      835 206.1698
 ```
 The 5-minute interval with the maximum average number of steps is interval 835, corresponding to the period from 8:35 AM to 8:40 AM.
 
 ## Imputing missing values
-```{r, echo=TRUE}
+
+``` r
 sum(is.na(activity$steps))
+```
+
+```
+## [1] 2304
 ```
 There are 2,304 missing values in the steps variable.
 
 To impute the missing values, I used the mean number of steps for the corresponding 5-minute interval across all days. This strategy uses the typical activity level for that particular time of day to replace missing observations.
 
-```{r, echo=TRUE}
+
+``` r
 activity_imputed <- activity
 ```
-```{r, echo=TRUE}
+
+``` r
 for (i in 1:nrow(activity_imputed)) {
     if (is.na(activity_imputed$steps[i])) {
         activity_imputed$steps[i] <-
@@ -81,57 +140,100 @@ for (i in 1:nrow(activity_imputed)) {
     }
 }
 ```
-```{r, echo=TRUE}
+
+``` r
 sum(is.na(activity_imputed$steps))
 ```
-```{r, echo=TRUE}
+
+```
+## [1] 0
+```
+
+``` r
 dailySteps_imputed <- aggregate(steps ~ date,
                                 data = activity_imputed,
                                 sum)
 ```
-```{r, echo=TRUE}
+
+``` r
 hist(dailySteps_imputed$steps,
      main = "Total Number of Steps Taken Each Day After Imputation",
      xlab = "Total Number of Steps",
      ylab = "Number of Days")
 ```
-```{r, echo=TRUE}
+
+![](PA1_template_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
+
+``` r
 mean(dailySteps_imputed$steps)
 ```
-```{r, echo=TRUE}
+
+```
+## [1] 10766.19
+```
+
+``` r
 median(dailySteps_imputed$steps)
+```
+
+```
+## [1] 10766.19
 ```
 After imputing the missing values, the mean total number of steps per day remained 10,766.19, while the median increased slightly from 10,765 to 10,766.19. Therefore, the imputation had very little effect on the overall estimates of daily activity.
 
 ## Are there differences in activity patterns between weekdays and weekends?
-```{r, echo=TRUE}
+
+``` r
 activity_imputed$date <- as.Date(activity_imputed$date)
 ```
-```{r, echo=TRUE}
+
+``` r
 activity_imputed$dayType <- ifelse(
     weekdays(activity_imputed$date) %in% c("Saturday", "Sunday"),
     "weekend",
     "weekday"
 )
 ```
-```{r, echo=TRUE}
+
+``` r
 activity_imputed$dayType <- factor(activity_imputed$dayType)
 ```
-```{r, echo=TRUE}
+
+``` r
 table(activity_imputed$dayType)
 ```
-```{r, echo=TRUE}
+
+```
+## 
+## weekday weekend 
+##   12960    4608
+```
+
+``` r
 weekendWeekday <- aggregate(steps ~ interval + dayType,
                              data = activity_imputed,
                              mean)
 ```
-```{r, echo=TRUE}
+
+``` r
 head(weekendWeekday)
 ```
-```{r, echo=TRUE}
+
+```
+##   interval dayType      steps
+## 1        0 weekday 2.25115304
+## 2        5 weekday 0.44528302
+## 3       10 weekday 0.17316562
+## 4       15 weekday 0.19790356
+## 5       20 weekday 0.09895178
+## 6       25 weekday 1.59035639
+```
+
+``` r
 library(lattice)
 ```
-```{r, echo=TRUE}
+
+``` r
 xyplot(steps ~ interval | dayType,
        data = weekendWeekday,
        type = "l",
@@ -140,4 +242,6 @@ xyplot(steps ~ interval | dayType,
        ylab = "Average Number of Steps",
        main = "Average Activity Patterns: Weekdays vs Weekends")
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-27-1.png)<!-- -->
 There are differences in activity patterns between weekdays and weekends. Weekday activity has a more pronounced peak earlier in the day, followed by relatively lower activity, while weekend activity shows more consistent fluctuations throughout the day.
